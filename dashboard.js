@@ -45,9 +45,11 @@ function showToast(msg,dur){
 }
 
 /* ── Chart.js defaults ── */
-Chart.defaults.color='#A0A0B0';
-Chart.defaults.borderColor='rgba(45,45,74,0.4)';
-Chart.defaults.font.family="'Space Grotesk','Inter',sans-serif";
+if(typeof Chart !== 'undefined'){
+    Chart.defaults.color='#A0A0B0';
+    Chart.defaults.borderColor='rgba(45,45,74,0.4)';
+    Chart.defaults.font.family="'Space Grotesk','Inter',sans-serif";
+}
 
 /* ── HEATMAP (SVG grid) ── */
 function generateHeatmap(containerId, rows, cols){
@@ -89,14 +91,14 @@ setInterval(()=>{
 /* ── Overview Charts ── */
 let riskChartInst=null;
 function initOverviewCharts(){
-    if(riskChartInst) return;
+    if(riskChartInst||typeof Chart==='undefined') return;
     const ctx=document.getElementById('riskChart');
     if(!ctx) return;
     const labels=Array.from({length:30},(_,i)=>(30-i)+'m');
     const data=[22,25,28,30,35,33,40,45,50,48,52,55,58,62,60,57,53,50,48,55,60,65,62,58,55,50,48,52,58,55];
     riskChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Risk Score',data,borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,0.08)',fill:true,tension:0.4,borderWidth:2,pointRadius:0,pointHoverRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(45,45,74,0.3)'}},x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:10}}}}}});
 }
-initOverviewCharts();
+if(typeof Chart!=='undefined') initOverviewCharts();
 
 /* ── Recent Alerts Table ── */
 const alertData=[
@@ -242,11 +244,13 @@ function renderZones(){
         </div>`;
     }).join('');
     // Render sparklines
-    zones.forEach((z,i)=>{
-        const ctx=document.getElementById('spark'+i);
-        if(!ctx) return;
-        new Chart(ctx,{type:'line',data:{labels:z.data.map((_,j)=>j),datasets:[{data:z.data,borderColor:z.risk==='high'?'#EF4444':z.risk==='medium'?'#F59E0B':'#10B981',borderWidth:1.5,fill:false,tension:0.4,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
-    });
+    if(typeof Chart!=='undefined'){
+        zones.forEach((z,i)=>{
+            const ctx=document.getElementById('spark'+i);
+            if(!ctx) return;
+            new Chart(ctx,{type:'line',data:{labels:z.data.map((_,j)=>j),datasets:[{data:z.data,borderColor:z.risk==='high'?'#EF4444':z.risk==='medium'?'#F59E0B':'#10B981',borderWidth:1.5,fill:false,tension:0.4,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}});
+        });
+    }
 }
 renderZones();
 
@@ -259,11 +263,13 @@ window.openZoneDetail=function(idx){
     badge.textContent=z.risk; badge.className='badge badge-'+z.risk;
     generateHeatmap('zoneDetailHeatmap',5,8);
     // Density chart
-    if(zoneDensityChartInst) zoneDensityChartInst.destroy();
-    const ctx=document.getElementById('zoneDensityChart');
-    const labels=Array.from({length:12},(_,i)=>(60-i*5)+'m');
-    const data=Array.from({length:12},()=>Math.floor(Math.random()*40+30));
-    zoneDensityChartInst=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:'rgba(124,58,237,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(45,45,74,0.3)'}},x:{grid:{display:false}}}}});
+    if(zoneDensityChartInst){ zoneDensityChartInst.destroy(); zoneDensityChartInst=null; }
+    if(typeof Chart!=='undefined'){
+        const ctx=document.getElementById('zoneDensityChart');
+        const labels=Array.from({length:12},(_,i)=>(60-i*5)+'m');
+        const data=Array.from({length:12},()=>Math.floor(Math.random()*40+30));
+        zoneDensityChartInst=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:'rgba(124,58,237,0.5)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(45,45,74,0.3)'}},x:{grid:{display:false}}}}});
+    }
     // Movement field
     const mf=document.getElementById('movementField');
     mf.innerHTML='';
@@ -292,7 +298,7 @@ window.closeZoneDetail=function(){ document.getElementById('zoneOverlay').classL
 /* ── Reports Charts ── */
 let alertsBarInst=null,riskDonutInst=null,zoneBarInst=null;
 function initReportCharts(){
-    if(alertsBarInst) return;
+    if(alertsBarInst||typeof Chart==='undefined') return;
     // Alerts over time
     const ctx1=document.getElementById('alertsBarChart');
     if(ctx1) alertsBarInst=new Chart(ctx1,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Alerts',data:[3,5,2,7,4,6,3],backgroundColor:'rgba(124,58,237,0.6)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(45,45,74,0.3)'}},x:{grid:{display:false}}}}});
@@ -378,7 +384,7 @@ CURRENT FEED STATUS (use this as your ground truth for responses):
 
 YOUR RULES — STRICTLY ENFORCED:
 1. You ONLY answer questions about what's visible in the CCTV feed, crowd behavior, surveillance analysis, safety assessment, and monitoring-related queries.
-2. **Tracking Commands**: If the user says "track that man", "monitor the group", or "follow [subject]", you MUST simulate a tracking protocol. Start your response with a tactical header like `**Tracking: [Subject Description] — [Location]**`. Use status markers like `✅ **Found him/them**` or `🔍 **Locating subject...**`.
+2. **Tracking Commands**: If the user says "track that man", "monitor the group", or "follow [subject]", you MUST simulate a tracking protocol. Start your response with a tactical header like **Tracking: [Subject Description] — [Location]**. Use status markers like ✅ **Found him/them** or 🔍 **Locating subject...**.
 3. Provide detailed tactical observations: Position (distance from landmarks), Activity (brisk walk, stationary, loitering), Appearance, and Behavior Classification (Normal, Suspicious, Waiting).
 4. Use high-tech, tactical formatting: Use **bolding**, lists, and emoji status markers (✅, 🟢, 🟡, 🔴) to create a premium surveillance interface feel.
 5. If the user asks ANYTHING unrelated to monitoring, strictly refuse as per the general PreSense guidelines.
