@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PreSense — AI-Powered Public Safety & Crowd Monitoring System with intelligent CCTV surveillance.">
+    <title>PreSense | Intelligent Surveillance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="preloader-inner">
+            <div class="preloader-ring"></div>
+            <div class="preloader-ring"></div>
+            <div class="preloader-ring"></div>
+            <div class="preloader-text">
+                <span class="preloader-logo">PRE<span class="accent">SENSE</span></span>
+                <div class="preloader-progress">
+                    <div class="preloader-bar" id="preloaderBar"></div>
+                </div>
+                <span class="preloader-percent" id="preloaderPercent">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Particle Canvas Background -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Scanline overlay -->
+    <div class="scanline-overlay"></div>
+
+    <!-- FULLSCREEN Camera Canvas -->
+    <canvas id="cameraCanvas"></canvas>
+
+    <!-- Neon Glow Overlay (pulses when mouse is idle) -->
+    <div class="glow-overlay" id="glowOverlay"></div>
+
+    <!-- Hero Catchy Text -->
+    <div class="hero-text-container">
+        <h1 class="hero-title">SENSE<br>THE UNSEEN.</h1>
+        <p class="hero-subtitle">PROACTIVE AI SURVEILLANCE<br>DETECTING JEOPARDY<br>BEFORE IT STRIKES.</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-logo">
+            <div class="logo-icon">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <circle cx="14" cy="14" r="12" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+                    <circle cx="14" cy="14" r="5" fill="url(#logoGrad)"/>
+                    <line x1="14" y1="2" x2="14" y2="8" stroke="url(#logoGrad)" stroke-width="1.5"/>
+                    <line x1="14" y1="20" x2="14" y2="26" stroke="url(#logoGrad)" stroke-width="1.5"/>
+                    <line x1="2" y1="14" x2="8" y2="14" stroke="url(#logoGrad)" stroke-width="1.5"/>
+                    <line x1="20" y1="14" x2="26" y2="14" stroke="url(#logoGrad)" stroke-width="1.5"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
+                            <stop offset="0%" stop-color="#a855f7"/>
+                            <stop offset="100%" stop-color="#7c3aed"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="logo-text">PRE<span class="accent">SENSE</span></span>
+        </div>
+        <div class="nav-links">
+            <a href="#" class="nav-link active">Home</a>
+            <a href="#" class="nav-link">Features</a>
+            <a href="#" class="nav-link">Technology</a>
+            <a href="#" class="nav-link">About</a>
+        </div>
+        </div>
+        <div class="nav-cta">
+            <a href="dashboard.html" class="btn-outline" style="text-decoration:none">Dashboard</a>
+            <a href="access.html" class="btn-primary" style="text-decoration:none">Get Access</a>
+        </div>
+    </nav>
+
+    <!-- Cursor Hint -->
+    <div class="cursor-hint" id="cursorHint">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+        <span>Move your cursor</span>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="transform: scaleX(-1)">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">
+        <div class="status-item">
+            <div class="status-dot live"></div>
+            <span>SYSTEM ACTIVE</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">TRACKING</span>
+            <span class="status-value" id="trackingAngle">0°</span>
+        </div>
+        <div class="status-item">
+            <span class="status-label">FRAME</span>
+            <span class="status-value" id="frameCounter">001 / 192</span>
+        </div>
+    </div>
+
+    <!-- Corner Decorations -->
+    <div class="corner-decor top-left"></div>
+    <div class="corner-decor top-right"></div>
+    <div class="corner-decor bottom-left"></div>
+    <div class="corner-decor bottom-right"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

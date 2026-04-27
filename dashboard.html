@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PreSense Dashboard — Real-time AI crowd monitoring and panic prediction.">
+    <title>PreSense | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="dot-grid-bg"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <a href="index.html" class="sidebar-logo">
+            <svg width="24" height="24" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="url(#slg)" stroke-width="2" fill="none"/><circle cx="14" cy="14" r="5" fill="url(#slg)"/><line x1="14" y1="2" x2="14" y2="8" stroke="url(#slg)" stroke-width="1.5"/><line x1="14" y1="20" x2="14" y2="26" stroke="url(#slg)" stroke-width="1.5"/><line x1="2" y1="14" x2="8" y2="14" stroke="url(#slg)" stroke-width="1.5"/><line x1="20" y1="14" x2="26" y2="14" stroke="url(#slg)" stroke-width="1.5"/><defs><linearGradient id="slg" x1="0" y1="0" x2="28" y2="28"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg>
+            <span>PRE<span class="accent">SENSE</span></span>
+        </a>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link active" data-page="overview" onclick="showPage('overview')">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="2"/><rect x="11" y="2" width="7" height="7" rx="2"/><rect x="2" y="11" width="7" height="7" rx="2"/><rect x="11" y="11" width="7" height="7" rx="2"/></svg>
+                <span>Overview</span>
+            </a>
+            <a class="sidebar-link" data-page="zones" onclick="showPage('zones')">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3"/><line x1="10" y1="3" x2="10" y2="1"/><line x1="10" y1="19" x2="10" y2="17"/><line x1="3" y1="10" x2="1" y2="10"/><line x1="19" y1="10" x2="17" y2="10"/></svg>
+                <span>Zones</span>
+            </a>
+            <a class="sidebar-link" data-page="alerts" onclick="showPage('alerts')">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 2L18 16H2L10 2z"/><line x1="10" y1="8" x2="10" y2="11"/><circle cx="10" cy="13.5" r="0.5" fill="currentColor"/></svg>
+                <span>Alerts</span>
+            </a>
+            <a class="sidebar-link" data-page="reports" onclick="showPage('reports')">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="14" height="16" rx="2"/><line x1="6" y1="6" x2="14" y2="6"/><line x1="6" y1="9" x2="14" y2="9"/><line x1="6" y1="12" x2="10" y2="12"/></svg>
+                <span>Reports</span>
+            </a>
+            <a class="sidebar-link" data-page="settings" onclick="showPage('settings')">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 1v2m0 14v2M1 10h2m14 0h2M3.5 3.5l1.4 1.4m10.2 10.2l1.4 1.4M16.5 3.5l-1.4 1.4M4.9 14.1l-1.4 1.4"/></svg>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-toggle" onclick="toggleSidebar()">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h12M4 10h12M4 14h12"/></svg>
+        </div>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar" id="topbar">
+        <span class="topbar-title" id="pageTitle">Overview</span>
+        <div class="topbar-right">
+            <span class="topbar-time" id="clock"></span>
+            <div class="avatar">AK</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="dash-content" id="dashContent">
+
+        <!-- ════════ OVERVIEW ════════ -->
+        <div class="page-section active" id="page-overview">
+            <div class="page-content">
+                <div class="metric-grid">
+                    <div class="metric-card"><div class="metric-label">Active Zones Monitored</div><div class="metric-value">12</div><div class="metric-sub">All feeds operational</div></div>
+                    <div class="metric-card"><div class="metric-label">Current Risk Level</div><div class="metric-value" style="color:var(--amber)">MEDIUM</div><div class="metric-sub">2 zones elevated</div></div>
+                    <div class="metric-card"><div class="metric-label">Alerts Today</div><div class="metric-value" style="color:var(--red)">3</div><div class="metric-sub">1 unresolved</div></div>
+                    <div class="metric-card"><div class="metric-label">People Tracked</div><div class="metric-value">14,820</div><div class="metric-sub">+12% from yesterday</div></div>
+                </div>
+                <!-- Live Footage Panel -->
+                <div class="panel live-footage-panel" style="margin-bottom:24px">
+                    <div class="panel-header">
+                        <span class="panel-title">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="vertical-align:-2px;margin-right:6px">
+                                <circle cx="8" cy="8" r="6" stroke="#EF4444" stroke-width="1.5" fill="none"/>
+                                <circle cx="8" cy="8" r="2.5" fill="#EF4444"/>
+                            </svg>
+                            Live Footage
+                        </span>
+                        <span class="badge badge-high live-rec-badge">● REC</span>
+                    </div>
+                    <div class="live-footage-grid">
+                        <!-- Video Feed -->
+                        <div class="live-feed-container">
+                            <div class="feed-header">
+                                <span class="feed-cam-label">CAM 1 — Main Gate Entrance</span>
+                                <span class="feed-timestamp" id="feedTimestamp"></span>
+                            </div>
+                            <div class="feed-video-wrap">
+                                <video id="cctvVideo" autoplay loop muted playsinline>
+                                    <source src="CCTV-Mock Video.mp4" type="video/mp4">
+                                </video>
+                                <div class="feed-overlay-hud">
+                                    <div class="hud-corner hud-tl"></div>
+                                    <div class="hud-corner hud-tr"></div>
+                                    <div class="hud-corner hud-bl"></div>
+                                    <div class="hud-corner hud-br"></div>
+                                    <div class="hud-scanline"></div>
+                                </div>
+                            </div>
+                            <div class="feed-footer">
+                                <span class="feed-status"><span class="status-dot live" style="width:5px;height:5px;display:inline-block;margin-right:4px"></span>LIVE</span>
+                                <span class="feed-res">1920×1080 · 30fps</span>
+                            </div>
+                        </div>
+                        <!-- AI Analysis -->
+                        <div class="ai-analysis-container">
+                            <div class="ai-analysis-header">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#A855F7" stroke-width="1.5"><circle cx="9" cy="9" r="7"/><path d="M9 5v4l3 2"/></svg>
+                                <span>AI Analysis — Real-time</span>
+                            </div>
+                            <div class="ai-analysis-body">
+                                <div class="ai-result-card ai-result-safe">
+                                    <div class="ai-result-icon">
+                                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="12" stroke="#10B981" stroke-width="2" fill="rgba(16,185,129,0.1)"/><path d="M9 14.5l3.5 3.5 6.5-7" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </div>
+                                    <div class="ai-result-content">
+                                        <div class="ai-result-title">No Threat Detected</div>
+                                        <div class="ai-result-level"><span class="badge badge-low">LOW RISK</span></div>
+                                    </div>
+                                </div>
+                                <div class="ai-detail-section">
+                                    <div class="ai-detail-label">Detection Summary</div>
+                                    <div class="ai-detail-text">
+                                        <strong>3 individuals</strong> detected moving at elevated speed (running) near platform entrance. Behavioral pattern analysis indicates <strong>non-threatening activity</strong> — consistent with commuters rushing to catch a departing train.
+                                    </div>
+                                </div>
+                                <div class="ai-detail-section">
+                                    <div class="ai-detail-label">AI Confidence</div>
+                                    <div class="ai-confidence-bar-wrap">
+                                        <div class="ai-confidence-bar" style="width:94%"></div>
+                                        <span class="ai-confidence-pct">94%</span>
+                                    </div>
+                                    <div class="ai-detail-text" style="margin-top:6px;font-size:0.72rem">Classification: <strong style="color:var(--green)">Routine Commuter Behavior</strong></div>
+                                </div>
+                                <div class="ai-detail-section">
+                                    <div class="ai-detail-label">Observations</div>
+                                    <ul class="ai-observations">
+                                        <li><span class="obs-icon">👥</span> 3 people running toward Platform 2</li>
+                                        <li><span class="obs-icon">🚆</span> Train departure scheduled in 1 min</li>
+                                        <li><span class="obs-icon">📊</span> No crowd compression detected</li>
+                                        <li><span class="obs-icon">✅</span> Movement direction: uniform, non-erratic</li>
+                                    </ul>
+                                </div>
+                                <div class="ai-detail-section">
+                                    <div class="ai-detail-label">Recommendation</div>
+                                    <div class="ai-recommendation">
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#10B981" stroke-width="1.5"><circle cx="7" cy="7" r="6"/><path d="M7 4v3.5M7 9.5h.01"/></svg>
+                                        <span>No action required. Continue passive monitoring.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panels">
+                    <div class="panel">
+                        <div class="panel-header"><span class="panel-title">Live Crowd Heatmap</span><span class="badge badge-medium">LIVE</span></div>
+                        <div class="heatmap-container" id="heatmapContainer"></div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header"><span class="panel-title">Risk Score Timeline</span><span class="panel-badge" style="color:var(--grey);font-size:0.7rem">Last 30 min</span></div>
+                        <div class="chart-container" style="height:260px"><canvas id="riskChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header"><span class="panel-title">Recent Alerts</span><a class="btn-ghost" onclick="showPage('alerts')">View All →</a></div>
+                    <table class="data-table">
+                        <thead><tr><th>Zone</th><th>Time</th><th>Type</th><th>Risk</th><th>Status</th></tr></thead>
+                        <tbody id="recentAlerts"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ ZONES ════════ -->
+        <div class="page-section" id="page-zones">
+            <div class="page-content">
+                <div class="zone-grid" id="zoneGrid"></div>
+            </div>
+        </div>
+
+        <!-- ════════ ALERTS ════════ -->
+        <div class="page-section" id="page-alerts">
+            <div class="page-content">
+                <div class="metric-grid" style="margin-bottom:20px">
+                    <div class="metric-card"><div class="metric-label">Active Alerts</div><div class="metric-value" style="color:var(--red)">3</div></div>
+                    <div class="metric-card"><div class="metric-label">Resolved Today</div><div class="metric-value" style="color:var(--green)">7</div></div>
+                    <div class="metric-card"><div class="metric-label">Avg Response Time</div><div class="metric-value">2.4<span style="font-size:0.9rem;color:var(--grey)">min</span></div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+                    <div class="filter-bar" id="alertFilters">
+                        <button class="filter-btn active" data-filter="all" onclick="filterAlerts('all',this)">All</button>
+                        <button class="filter-btn" data-filter="high" onclick="filterAlerts('high',this)">High</button>
+                        <button class="filter-btn" data-filter="medium" onclick="filterAlerts('medium',this)">Medium</button>
+                        <button class="filter-btn" data-filter="low" onclick="filterAlerts('low',this)">Low</button>
+                        <button class="filter-btn" data-filter="resolved" onclick="filterAlerts('resolved',this)">Resolved</button>
+                    </div>
+                    <button class="btn btn-purple" onclick="simulateAlert()" id="simAlertBtn">⚡ Simulate Alert</button>
+                </div>
+                <div class="panel">
+                    <table class="data-table">
+                        <thead><tr><th>Timestamp</th><th>Zone</th><th>Type</th><th>Risk</th><th>Recommended Action</th><th>Action</th></tr></thead>
+                        <tbody id="alertTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ REPORTS ════════ -->
+        <div class="page-section" id="page-reports">
+            <div class="page-content">
+                <div class="date-picker">
+                    <button class="filter-btn active" onclick="setDateRange(this)">Last 7 Days</button>
+                    <button class="filter-btn" onclick="setDateRange(this)">Last 30 Days</button>
+                    <button class="filter-btn" onclick="setDateRange(this)">Last 90 Days</button>
+                    <button class="btn btn-purple" onclick="exportReport()" style="margin-left:auto">📄 Export PDF</button>
+                </div>
+                <div class="panels">
+                    <div class="panel"><div class="panel-header"><span class="panel-title">Alerts Over Time</span></div><div class="chart-container" style="height:250px"><canvas id="alertsBarChart"></canvas></div></div>
+                    <div class="panel"><div class="panel-header"><span class="panel-title">Risk Level Distribution</span></div><div class="chart-container" style="height:250px"><canvas id="riskDonut"></canvas></div></div>
+                </div>
+                <div class="panel" style="margin-bottom:24px"><div class="panel-header"><span class="panel-title">Zone Comparison</span></div><div class="chart-container" style="height:250px"><canvas id="zoneBarChart"></canvas></div></div>
+                <div class="report-summary">
+                    <div class="panel-header"><span class="panel-title">Summary</span></div>
+                    <div class="report-stat">
+                        <div class="report-stat-item"><div class="report-stat-value">14</div><div class="report-stat-label">Incidents Predicted</div></div>
+                        <div class="report-stat-item"><div class="report-stat-value" style="color:var(--green)">0</div><div class="report-stat-label">Escalated to Emergency</div></div>
+                        <div class="report-stat-item"><div class="report-stat-value">400+</div><div class="report-stat-label">Estimated Lives Protected</div></div>
+                        <div class="report-stat-item"><div class="report-stat-value">2.4<span style="font-size:0.9rem">min</span></div><div class="report-stat-label">Avg Response Time</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ SETTINGS ════════ -->
+        <div class="page-section" id="page-settings">
+            <div class="page-content" style="max-width:720px">
+                <div class="settings-section">
+                    <div class="settings-title">Profile</div>
+                    <div class="setting-row"><div><div class="setting-label">Display Name</div><div class="setting-desc">Arun Kumar</div></div><button class="btn btn-outline-sm">Edit</button></div>
+                    <div class="setting-row"><div><div class="setting-label">Email</div><div class="setting-desc">arun@presense.ai</div></div><button class="btn btn-outline-sm">Edit</button></div>
+                    <div class="setting-row"><div><div class="setting-label">Organization</div><div class="setting-desc">Ministry of Urban Safety</div></div><button class="btn btn-outline-sm">Edit</button></div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">Notification Preferences</div>
+                    <div class="setting-row"><div><div class="setting-label">Email Alerts</div><div class="setting-desc">Receive critical alerts via email</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">SMS Alerts</div><div class="setting-desc">Receive SMS for high-risk events</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">Push Notifications</div><div class="setting-desc">Browser push notifications</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">Alert Thresholds</div>
+                    <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+                        <div style="display:flex;justify-content:space-between"><span class="setting-label">Low Risk Trigger</span><span style="color:var(--green);font-weight:600" id="lowVal">30%</span></div>
+                        <input type="range" class="range-slider" min="10" max="50" value="30" oninput="document.getElementById('lowVal').textContent=this.value+'%'">
+                    </div>
+                    <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+                        <div style="display:flex;justify-content:space-between"><span class="setting-label">Medium Risk Trigger</span><span style="color:var(--amber);font-weight:600" id="medVal">60%</span></div>
+                        <input type="range" class="range-slider" min="40" max="80" value="60" oninput="document.getElementById('medVal').textContent=this.value+'%'">
+                    </div>
+                    <div class="setting-row" style="flex-direction:column;align-items:stretch;gap:8px">
+                        <div style="display:flex;justify-content:space-between"><span class="setting-label">High Risk Trigger</span><span style="color:var(--red);font-weight:600" id="highVal">85%</span></div>
+                        <input type="range" class="range-slider" min="70" max="100" value="85" oninput="document.getElementById('highVal').textContent=this.value+'%'">
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">Connected Feeds</div>
+                    <div class="setting-row"><div><div class="setting-label">CCTV Feed 1 — Main Gate</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">CCTV Feed 2 — East Wing</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">CCTV Feed 3 — West Corridor</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">CCTV Feed 4 — South Plaza</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">Drone Feed 1 — Aerial North</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                    <div class="setting-row"><div><div class="setting-label">Drone Feed 2 — Aerial South</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                </div>
+                <div class="settings-section">
+                    <div class="settings-title">API Key</div>
+                    <div class="api-key">ps_live_••••••••••••••••••••••••k4Qm</div>
+                </div>
+                <button class="btn btn-purple" onclick="saveSettings()" style="margin-top:12px">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone Detail Overlay -->
+    <div class="zone-detail-overlay" id="zoneOverlay">
+        <div class="zone-detail-card">
+            <button class="zone-detail-close" onclick="closeZoneDetail()">✕</button>
+            <h2 id="zoneDetailName" style="margin-bottom:4px"></h2>
+            <span class="badge" id="zoneDetailBadge" style="margin-bottom:20px"></span>
+            <div class="panels" style="margin-top:16px">
+                <div class="panel"><div class="panel-title" style="margin-bottom:12px">Crowd Heatmap</div><div class="heatmap-container" id="zoneDetailHeatmap"></div></div>
+                <div class="panel"><div class="panel-title" style="margin-bottom:12px">Crowd Density (1 hr)</div><div class="chart-container" style="height:180px"><canvas id="zoneDensityChart"></canvas></div></div>
+            </div>
+            <div class="panels" style="margin-top:0">
+                <div class="panel"><div class="panel-title" style="margin-bottom:12px">Movement Vector Field</div><div class="movement-field" id="movementField"></div></div>
+                <div class="panel"><div class="panel-title" style="margin-bottom:12px">Risk Factors</div><div class="risk-checklist" id="riskChecklist"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
