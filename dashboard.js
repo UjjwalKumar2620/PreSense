@@ -264,7 +264,6 @@ window.saveSettings=function(){ showToast('✅ Settings saved successfully!'); }
    AI CHAT — OpenRouter Integration
    ═══════════════════════════════════════════ */
 
-const OPENROUTER_API_KEY = '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';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const AI_MODELS = [
     'minimax/minimax-m2.5:free',
@@ -273,6 +272,54 @@ const AI_MODELS = [
     'google/gemma-3-27b-it:free',
     'nousresearch/hermes-3-llama-3.1-405b:free'
 ];
+
+/* ── API Key Management (stored in browser, never in code) ── */
+function getApiKey() {
+    return localStorage.getItem('presense_openrouter_key') || '';
+}
+function setApiKey(key) {
+    localStorage.setItem('presense_openrouter_key', key);
+}
+function promptForApiKey() {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'apiKeyOverlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(10,10,15,0.9);backdrop-filter:blur(10px)';
+        overlay.innerHTML = `
+            <div style="background:#12121A;border:1px solid #2D2D4A;border-radius:16px;padding:36px;max-width:480px;width:90%;text-align:center">
+                <div style="margin-bottom:16px">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#7C3AED" stroke-width="2" fill="rgba(124,58,237,0.1)"/><path d="M14 20h12M14 16h8" stroke="#A855F7" stroke-width="1.5" stroke-linecap="round"/><circle cx="28" cy="14" r="3" fill="#A855F7"/></svg>
+                </div>
+                <h3 style="font-family:'Space Grotesk',sans-serif;font-size:1.3rem;margin-bottom:8px;color:#F0EAF8">Connect PreSense AI</h3>
+                <p style="font-size:0.85rem;color:#A0A0B0;margin-bottom:20px;line-height:1.5">Enter your OpenRouter API key to enable AI-powered surveillance analysis. Get a free key at <a href="https://openrouter.ai/settings/keys" target="_blank" style="color:#A855F7">openrouter.ai</a></p>
+                <input type="password" id="apiKeyInput" placeholder="sk-or-v1-..." style="width:100%;padding:12px 16px;background:#0A0A0F;border:1px solid #2D2D4A;border-radius:8px;color:white;font-family:'Space Grotesk',sans-serif;font-size:0.9rem;outline:none;margin-bottom:16px" />
+                <div style="display:flex;gap:10px;justify-content:center">
+                    <button id="apiKeySave" style="padding:10px 24px;background:#7C3AED;color:white;border:none;border-radius:8px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:0.85rem">Connect AI</button>
+                    <button id="apiKeyCancel" style="padding:10px 24px;background:transparent;color:#A0A0B0;border:1px solid #2D2D4A;border-radius:8px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:0.85rem">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById('apiKeySave').onclick = () => {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                setApiKey(key);
+                overlay.remove();
+                resolve(key);
+            }
+        };
+        document.getElementById('apiKeyCancel').onclick = () => {
+            overlay.remove();
+            resolve('');
+        };
+        document.getElementById('apiKeyInput').onkeydown = (e) => {
+            if (e.key === 'Enter') document.getElementById('apiKeySave').click();
+        };
+        setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
+    });
+}
 
 /* ── System Prompts ── */
 const ZONE_SYSTEM_PROMPT = `You are PreSense AI — an advanced AI-powered crowd monitoring and public safety intelligence system deployed at a large transportation hub / public event venue.
@@ -324,6 +371,12 @@ let monitorConversation = [];
 
 /* ── OpenRouter API call with model fallback ── */
 async function callOpenRouter(systemPrompt, conversationHistory, userMessage) {
+    let apiKey = getApiKey();
+    if (!apiKey) {
+        apiKey = await promptForApiKey();
+        if (!apiKey) return '⚠️ API key is required to use AI features. Click on the chat again to enter your key.';
+    }
+
     const messages = [
         { role: 'system', content: systemPrompt },
         ...conversationHistory,
@@ -336,7 +389,7 @@ async function callOpenRouter(systemPrompt, conversationHistory, userMessage) {
             const response = await fetch(OPENROUTER_URL, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Authorization': `Bearer ${apiKey}`,
                     'Content-Type': 'application/json',
                     'HTTP-Referer': window.location.href,
                     'X-Title': 'PreSense Dashboard'
@@ -351,7 +404,12 @@ async function callOpenRouter(systemPrompt, conversationHistory, userMessage) {
 
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
+                const errCode = errData.error?.code || response.status;
                 console.warn(`Model ${model} failed:`, errData.error?.message);
+                if (errCode === 401) {
+                    localStorage.removeItem('presense_openrouter_key');
+                    return '⚠️ Invalid API key. Please try again — you will be prompted for a new key.';
+                }
                 continue; // try next model
             }
 
