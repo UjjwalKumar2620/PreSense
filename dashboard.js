@@ -19,8 +19,14 @@ window.showPage=function(page){
     document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
     document.getElementById('page-'+page).classList.add('active');
     document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.toggle('active',l.dataset.page===page));
-    const titles={overview:'Overview',zones:'Zone Monitor',alerts:'Alerts',reports:'Reports',settings:'Settings'};
+    const titles={overview:'Overview',zones:'Zone Monitor',aioverview:'AI Zone Overview',monitorai:'Monitor with AI',alerts:'Alerts',reports:'Reports',settings:'Settings'};
     document.getElementById('pageTitle').textContent=titles[page]||page;
+    
+    // Auto-play monitor video if on that page
+    if(page === 'monitorai') {
+        const vid = document.getElementById('monitorVideo');
+        if(vid) vid.play();
+    }
     // Init charts lazily
     if(page==='overview') initOverviewCharts();
     if(page==='reports') initReportCharts();
@@ -254,3 +260,205 @@ window.exportReport=function(){
 window.saveSettings=function(){ showToast('✅ Settings saved successfully!'); };
 
 })();
+/* ═══════════════════════════════════════════
+   AI CHAT — OpenRouter Integration
+   ═══════════════════════════════════════════ */
+
+const OPENROUTER_API_KEY = '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';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const AI_MODELS = [
+    'minimax/minimax-m2.5:free',
+    'inclusionai/ling-2.6-flash:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemma-3-27b-it:free',
+    'nousresearch/hermes-3-llama-3.1-405b:free'
+];
+
+/* ── System Prompts ── */
+const ZONE_SYSTEM_PROMPT = `You are PreSense AI — an advanced AI-powered crowd monitoring and public safety intelligence system deployed at a large transportation hub / public event venue.
+
+You have access to live CCTV feeds, crowd density sensors, movement tracking, and behavioral analysis across these monitored zones:
+- Main Gate A: Primary entrance, 3,420 people tracked, HIGH density
+- East Wing: East corridor and train platform area, 2,180 people tracked, MEDIUM risk
+- South Plaza: Open vendor and leisure area, 1,850 people tracked, LOW risk
+- North Corridor: Bi-directional transit corridor, 2,650 people tracked, MEDIUM risk
+- West Gate: Exit turnstile area, 1,920 people tracked, LOW risk
+- Central Arena: Event/concert space, 2,800 people tracked, HIGH risk (post-event dispersal)
+
+YOUR RULES — STRICTLY ENFORCED:
+1. You ONLY answer questions related to: crowd monitoring, surveillance analysis, public safety, crowd density, stampede prevention, crowd movement patterns, zone status, risk assessment, emergency protocols, CCTV analysis, behavioral detection, and the PreSense system itself.
+2. If the user asks ANYTHING unrelated (e.g. coding, math, recipes, personal questions, jokes, general knowledge, weather, politics, sports, entertainment, etc.), you MUST refuse with: "⚠️ I can only assist with crowd monitoring, surveillance, and public safety topics. Please ask me about zone activity, crowd analysis, or safety assessments."
+3. Keep responses concise but detailed. Use data points and specific numbers.
+4. Use emoji indicators for risk: 🟢 LOW, 🟡 MEDIUM, 🔴 HIGH, 🚨 CRITICAL.
+5. Always maintain a professional, security-operations tone.`;
+
+const MONITOR_SYSTEM_PROMPT = `You are PreSense AI — an advanced real-time video surveillance analysis system. You are currently monitoring CAM 1 — Main Gate Entrance of a busy railway station / public venue.
+
+You can "see" the live CCTV feed and analyze:
+- People count, positions, and movement patterns
+- Behavioral anomalies (running, loitering, aggression)
+- Crowd density and flow direction
+- Individual tracking and activity classification
+
+CURRENT FEED STATUS (use this as your ground truth for responses):
+- Camera: CAM 1 — Main Gate Entrance
+- Resolution: 1920×1080, 30fps
+- Currently visible: ~38-45 people in frame
+- Scene: Railway station main corridor, people walking in both directions
+- Notable: 2-3 individuals walking briskly (classified as commuters, not threats)
+- A man standing near a pillar — stationary for ~4 minutes (classified as waiting)
+- General crowd flow: steady, bi-directional, no compression zones
+- Lighting: well-lit indoor corridor
+- Risk Level: 🟢 LOW
+
+YOUR RULES — STRICTLY ENFORCED:
+1. You ONLY answer questions about what's visible in the CCTV feed, crowd behavior, surveillance analysis, safety assessment, and monitoring-related queries.
+2. If the user asks ANYTHING unrelated to surveillance/monitoring (e.g. coding, math, recipes, jokes, general knowledge, etc.), you MUST refuse with: "⚠️ I can only analyze the live feed and discuss surveillance/safety topics. Please ask about what you see in the footage."
+3. Respond as if you are actively watching the feed in real-time.
+4. Reference specific visual details to make responses feel authentic.
+5. Keep responses concise but insightful. Be specific about positions, counts, and behaviors.`;
+
+/* ── Conversation histories ── */
+let zoneConversation = [];
+let monitorConversation = [];
+
+/* ── OpenRouter API call with model fallback ── */
+async function callOpenRouter(systemPrompt, conversationHistory, userMessage) {
+    const messages = [
+        { role: 'system', content: systemPrompt },
+        ...conversationHistory,
+        { role: 'user', content: userMessage }
+    ];
+
+    for (const model of AI_MODELS) {
+        try {
+            console.log(`Trying model: ${model}`);
+            const response = await fetch(OPENROUTER_URL, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': window.location.href,
+                    'X-Title': 'PreSense Dashboard'
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages,
+                    max_tokens: 500,
+                    temperature: 0.7
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.warn(`Model ${model} failed:`, errData.error?.message);
+                continue; // try next model
+            }
+
+            const data = await response.json();
+            const content = data.choices?.[0]?.message?.content;
+            if (content) {
+                console.log(`Success with model: ${model}`);
+                return content;
+            }
+            continue; // empty response, try next
+        } catch (error) {
+            console.warn(`Model ${model} error:`, error.message);
+            continue; // try next model
+        }
+    }
+
+    return '⚠️ All AI models are temporarily unavailable. Please try again in a moment.';
+}
+
+/* ── Loading indicator ── */
+function showTypingIndicator(containerId) {
+    const container = document.getElementById(containerId);
+    const indicator = document.createElement('div');
+    indicator.className = containerId === 'aiChatMessages' ? 'ai-msg ai-msg-ai' : 'mchat-msg mchat-ai';
+    indicator.id = 'typing-indicator-' + containerId;
+    indicator.innerHTML = containerId === 'aiChatMessages'
+        ? `<div class="ai-msg-avatar">AI</div><div class="ai-msg-bubble" style="display:flex;gap:4px;align-items:center"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`
+        : `<div class="mchat-avatar">AI</div><div class="mchat-bubble" style="display:flex;gap:4px;align-items:center"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+    container.appendChild(indicator);
+    container.scrollTop = container.scrollHeight;
+}
+
+function removeTypingIndicator(containerId) {
+    const el = document.getElementById('typing-indicator-' + containerId);
+    if (el) el.remove();
+}
+
+/* ── AI Overview Chat ── */
+window.askAI = async function(btn) {
+    const question = btn.dataset.q;
+    appendAiMessage('user', question, 'aiChatMessages');
+    showTypingIndicator('aiChatMessages');
+
+    zoneConversation.push({ role: 'user', content: question });
+    const reply = await callOpenRouter(ZONE_SYSTEM_PROMPT, zoneConversation.slice(0, -1), question);
+    zoneConversation.push({ role: 'assistant', content: reply });
+
+    removeTypingIndicator('aiChatMessages');
+    appendAiMessage('ai', reply, 'aiChatMessages');
+};
+
+window.sendAiChat = async function() {
+    const input = document.getElementById('aiChatInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    appendAiMessage('user', msg, 'aiChatMessages');
+    input.value = '';
+    showTypingIndicator('aiChatMessages');
+
+    zoneConversation.push({ role: 'user', content: msg });
+    const reply = await callOpenRouter(ZONE_SYSTEM_PROMPT, zoneConversation.slice(0, -1), msg);
+    zoneConversation.push({ role: 'assistant', content: reply });
+
+    removeTypingIndicator('aiChatMessages');
+    appendAiMessage('ai', reply, 'aiChatMessages');
+};
+
+/* ── Monitor with AI Chat ── */
+window.sendMonitorChat = async function(presetMsg) {
+    const input = document.getElementById('monitorChatInput');
+    const msg = presetMsg || input.value.trim();
+    if (!msg) return;
+
+    appendMonitorMessage('user', msg);
+    if (!presetMsg) input.value = '';
+    showTypingIndicator('monitorChatMessages');
+
+    monitorConversation.push({ role: 'user', content: msg });
+    const reply = await callOpenRouter(MONITOR_SYSTEM_PROMPT, monitorConversation.slice(0, -1), msg);
+    monitorConversation.push({ role: 'assistant', content: reply });
+
+    removeTypingIndicator('monitorChatMessages');
+    appendMonitorMessage('ai', reply);
+};
+
+/* ── Message Renderers ── */
+function appendAiMessage(role, text, containerId) {
+    const container = document.getElementById(containerId);
+    const msg = document.createElement('div');
+    msg.className = `ai-msg ai-msg-${role}`;
+    msg.innerHTML = `
+        <div class="ai-msg-avatar">${role === 'user' ? 'YOU' : 'AI'}</div>
+        <div class="ai-msg-bubble">${text}</div>
+    `;
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+}
+
+function appendMonitorMessage(role, text) {
+    const container = document.getElementById('monitorChatMessages');
+    const msg = document.createElement('div');
+    msg.className = `mchat-msg mchat-msg-${role} mchat-${role}`;
+    msg.innerHTML = `
+        <div class="mchat-avatar">${role === 'user' ? 'YOU' : 'AI'}</div>
+        <div class="mchat-bubble">${text}</div>
+    `;
+    container.appendChild(msg);
+    container.scrollTop = container.scrollHeight;
+}
