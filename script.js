@@ -7,7 +7,7 @@
     'use strict';
 
     const TOTAL_FRAMES = 192;
-    const FRAME_PATH = 'ezgif-32175e74363a0928-jpg/ezgif-frame-';
+    const FRAME_PATH = 'ezgif-32175e74363a0928.jpg/ezgif-frame-';
     const FRAME_EXT = '.jpg';
     const LERP_SPEED = 0.08;
     const PRELOAD_BATCH = 16;
