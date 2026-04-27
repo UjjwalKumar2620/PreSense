@@ -709,11 +709,28 @@ a { color: inherit; text-decoration: none; }
     gap: 20px;
     height: calc(100vh - 140px);
 }
+.monitor-feed-side,
+.monitor-chat-side {
+    min-height: 0; /* critical for grid children to not overflow */
+}
+.monitor-feed-side > .panel,
+.monitor-chat-side > .panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 .feed-video-wrap {
     position: relative;
     background: black;
     border-radius: 8px;
     overflow: hidden;
+    flex: 1;
+    min-height: 0;
+}
+.feed-footer {
+    padding: 8px 0 0;
+    flex-shrink: 0;
 }
 .monitor-chat-messages {
     flex: 1;
@@ -722,6 +739,7 @@ a { color: inherit; text-decoration: none; }
     display: flex;
     flex-direction: column;
     gap: 12px;
+    min-height: 0; /* allows flex item to shrink and scroll */
 }
 .mchat-msg { display: flex; gap: 10px; margin-bottom: 5px; }
 .mchat-msg-user { flex-direction: row-reverse; }
