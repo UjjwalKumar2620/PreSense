@@ -406,6 +406,55 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <!-- Alert Simulation Modal -->
+    <div class="modal-overlay" id="alertModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚡ Simulate New Alert</h3>
+                <button class="btn-close" onclick="closeAlertModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Select Location (Place)</label>
+                    <select id="simAlertPlace">
+                        <option value="Main Gate A">Main Gate A</option>
+                        <option value="East Wing">East Wing</option>
+                        <option value="South Plaza">South Plaza</option>
+                        <option value="North Corridor">North Corridor</option>
+                        <option value="West Gate">West Gate</option>
+                        <option value="Central Arena">Central Arena</option>
+                        <option value="Parking Zone B">Parking Zone B</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top:20px">
+                    <label>Select Alert Level</label>
+                    <div class="level-select">
+                        <button class="level-btn level-yellow active" onclick="setSimLevel('yellow', this)">
+                            <div class="level-dot"></div>
+                            <span>Yellow</span>
+                            <small>Small Crowd</small>
+                        </button>
+                        <button class="level-btn level-red" onclick="setSimLevel('high', this)">
+                            <div class="level-dot"></div>
+                            <span>Red</span>
+                            <small>Mishap</small>
+                        </button>
+                        <button class="level-btn level-darkred" onclick="setSimLevel('critical', this)">
+                            <div class="level-dot"></div>
+                            <span>Dark Red</span>
+                            <small>Disaster</small>
+                        </button>
+                    </div>
+                </div>
+                <input type="hidden" id="simAlertLevel" value="yellow">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-purple" style="width:100%" onclick="confirmSimulateAlert()">Broadcast Alert</button>
+            </div>
+        </div>
+    </div>
+
     <script src="dashboard.js"></script>
 </body>
 </html>
+

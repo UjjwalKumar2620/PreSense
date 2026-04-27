@@ -111,7 +111,8 @@ const alertData=[
     {zone:'Main Gate A',time:'06:50',type:'Density Spike',risk:'low',status:'Resolved'},
     {zone:'South Plaza',time:'05:30',type:'Panic Predicted',risk:'medium',status:'Resolved'},
 ];
-const badgeClass={low:'badge-low',medium:'badge-medium',high:'badge-high',resolved:'badge-resolved'};
+const badgeClass={low:'badge-low',medium:'badge-medium',high:'badge-high',critical:'badge-critical',yellow:'badge-yellow',resolved:'badge-resolved'};
+
 
 function renderRecentAlerts(){
     const tb=document.getElementById('recentAlerts'); if(!tb) return;
@@ -125,11 +126,20 @@ const actions={
     'Panic Predicted':'Open emergency exits immediately',
     'Compression Detected':'Reduce inflow, expand barriers',
     'Directional Conflict':'Redirect flow via PA system',
-    'Exit Blockage':'Clear obstruction, open alt exit'
+    'Exit Blockage':'Clear obstruction, open alt exit',
+    'Crowd Surge':'Monitor flow and open auxiliary gates',
+    'Incident Reported':'Dispatch rapid response unit',
+    'Extreme Disaster':'EXECUTE EVACUATION PROTOCOL'
 };
+
 function renderAlerts(filter){
     const tb=document.getElementById('alertTableBody'); if(!tb) return;
-    const filtered=filter==='all'?alertData:filter==='resolved'?alertData.filter(a=>a.status==='Resolved'):alertData.filter(a=>a.risk===filter);
+    const filtered=filter==='all'?alertData:
+        filter==='resolved'?alertData.filter(a=>a.status==='Resolved'):
+        filter==='high'?alertData.filter(a=>a.risk==='high'||a.risk==='critical'):
+        filter==='low'?alertData.filter(a=>a.risk==='low'||a.risk==='yellow'):
+        alertData.filter(a=>a.risk===filter);
+
     tb.innerHTML=filtered.map((a,i)=>`<tr class="alert-row" data-risk="${a.risk}" data-status="${a.status.toLowerCase()}">
         <td>Today ${a.time}</td><td>${a.zone}</td><td>${a.type}</td>
         <td><span class="badge ${badgeClass[a.risk]}">${a.risk}</span></td>
@@ -149,18 +159,66 @@ window.resolveAlert=function(btn){
     showToast('Alert resolved successfully');
 };
 window.simulateAlert=function(){
-    const newAlert={zone:'Central Arena',time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),type:'Panic Predicted',risk:'high',status:'Active'};
+    document.getElementById('alertModal').classList.add('show');
+};
+window.closeAlertModal=function(){
+    document.getElementById('alertModal').classList.remove('show');
+};
+window.setSimLevel=function(level, btn){
+    document.querySelectorAll('.level-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('simAlertLevel').value=level;
+};
+window.confirmSimulateAlert=function(){
+    const place=document.getElementById('simAlertPlace').value;
+    const level=document.getElementById('simAlertLevel').value;
+    
+    let type='Density Spike';
+    let risk='medium';
+    let toastMsg='Alert Broadcasted';
+    
+    if(level==='yellow'){
+        type='Crowd Surge';
+        risk='yellow';
+        toastMsg=`⚠️ MINOR: Crowd buildup at ${place}`;
+    } else if(level==='high'){
+        type='Incident Reported';
+        risk='high';
+        toastMsg=`🚨 URGENT: Incident reported at ${place}!`;
+    } else if(level==='critical'){
+        type='Extreme Disaster';
+        risk='critical';
+        toastMsg=`🛑 CRITICAL: Disaster detected at ${place}! EVACUATE NOW.`;
+    }
+    
+    const newAlert={
+        zone: place,
+        time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),
+        type: type,
+        risk: risk,
+        status: 'Active'
+    };
+    
     alertData.unshift(newAlert);
     renderAlerts('all');
     renderRecentAlerts();
+    closeAlertModal();
+    
     // Flash the first row
     const firstRow=document.querySelector('#alertTableBody tr');
-    if(firstRow){ firstRow.classList.add('alert-flash'); setTimeout(()=>firstRow.classList.remove('alert-flash'),3500); }
-    showToast('🚨 CRITICAL: Panic predicted at Central Arena!',4000);
-    // Reset filter buttons
+    if(firstRow){ 
+        firstRow.classList.add('alert-flash'); 
+        setTimeout(()=>firstRow.classList.remove('alert-flash'),3500); 
+    }
+    
+    showToast(toastMsg, 5000);
+    
+    // Reset filters
     document.querySelectorAll('#alertFilters .filter-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelector('#alertFilters .filter-btn[data-filter="all"]').classList.add('active');
+    const allBtn=document.querySelector('#alertFilters .filter-btn[data-filter="all"]');
+    if(allBtn) allBtn.classList.add('active');
 };
+
 
 /* ── Zone Cards ── */
 const zones=[
@@ -296,7 +354,8 @@ YOUR RULES — STRICTLY ENFORCED:
 2. If the user asks ANYTHING unrelated (e.g. coding, math, recipes, personal questions, jokes, general knowledge, weather, politics, sports, entertainment, etc.), you MUST refuse with: "⚠️ I can only assist with crowd monitoring, surveillance, and public safety topics. Please ask me about zone activity, crowd analysis, or safety assessments."
 3. Keep responses concise but detailed. Use data points and specific numbers.
 4. Use emoji indicators for risk: 🟢 LOW, 🟡 MEDIUM, 🔴 HIGH, 🚨 CRITICAL.
-5. Always maintain a professional, security-operations tone.`;
+5. Always maintain a professional, security-operations tone. Use structured reporting with bold headers for status updates.
+6. If the user asks to "check" or "monitor" a specific zone, respond with a status report like: **[Zone Name] — Tactical Status Update**.`;
 
 const MONITOR_SYSTEM_PROMPT = `You are PreSense AI — an advanced real-time video surveillance analysis system. You are currently monitoring CAM 1 — Main Gate Entrance of a busy railway station / public venue.
 
@@ -310,13 +369,19 @@ CURRENT FEED STATUS (use this as your ground truth for responses):
 - Camera: CAM 1 — Main Gate Entrance
 - Resolution: 1920×1080, 30fps
 - Currently visible: 42 people in frame.
-- Scene: Main transit corridor.
-- Specific Activity: A man in a blue jacket is standing near the central pillar (waiting for 5 mins). A group of 4 teenagers is walking briskly toward the East Gate. A woman is checking the arrival board.
-- General crowd flow: Moving steadily; no blockages or suspicious loitering detected.
+- Specific Subjects for Tracking: 
+  1. **Man in Orange Jacket**: Standing near the concrete pillar on the right side. Carrying a small backpack. Checking phone periodically. Stationary for ~4-5 mins.
+  2. **Group near entrance**: 4 teenagers walking briskly toward the East Gate.
+  3. **Commuter at board**: Woman in grey coat checking arrival boards.
+- General crowd flow: Moving steadily; bi-directional; no blockages.
 - Risk Level: 🟢 LOW (Normal operations)
 
 YOUR RULES — STRICTLY ENFORCED:
 1. You ONLY answer questions about what's visible in the CCTV feed, crowd behavior, surveillance analysis, safety assessment, and monitoring-related queries.
+2. **Tracking Commands**: If the user says "track that man", "monitor the group", or "follow [subject]", you MUST simulate a tracking protocol. Start your response with a tactical header like `**Tracking: [Subject Description] — [Location]**`. Use status markers like `✅ **Found him/them**` or `🔍 **Locating subject...**`.
+3. Provide detailed tactical observations: Position (distance from landmarks), Activity (brisk walk, stationary, loitering), Appearance, and Behavior Classification (Normal, Suspicious, Waiting).
+4. Use high-tech, tactical formatting: Use **bolding**, lists, and emoji status markers (✅, 🟢, 🟡, 🔴) to create a premium surveillance interface feel.
+5. If the user asks ANYTHING unrelated to monitoring, strictly refuse as per the general PreSense guidelines.
 2. If the user asks ANYTHING unrelated to surveillance/monitoring (e.g. coding, math, recipes, jokes, general knowledge, etc.), you MUST refuse with: "⚠️ I can only analyze the live feed and discuss surveillance/safety topics. Please ask about what you see in the footage."
 3. Respond as if you are actively watching the feed in real-time.
 4. Reference specific visual details to make responses feel authentic.
